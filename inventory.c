@@ -5,13 +5,6 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <string.h>
-/*
-bool parse_counted_file(Product *product, Report *report);
-bool parse_expected_file(Product *product, Report *report);
-bool product_list_append(ProductList *list, Product *product);
-int load_expected_inventory(ProductList *list, Report *report);
-void free_product_list(ProductList *list, Report *report);
-*/
 
 
 int list_append(ProductList *list, Product *product) {
