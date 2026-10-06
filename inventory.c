@@ -4,12 +4,31 @@
 #include <errno.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
+/*
+bool parse_counted_file(Product *product, Report *report);
+bool parse_expected_file(Product *product, Report *report);
+bool product_list_append(ProductList *list, Product *product);
+int load_expected_inventory(ProductList *list, Report *report);
+void free_product_list(ProductList *list, Report *report);
+*/
 
 
 int list_append(ProductList *list, Product *product) {
     if (list->count >= list->capacity) { // reallocate if the list is full
-        size_t new_capacity = (list->capacity == 0) ? 1 : list->capacity * 2;// Double the capacity 
+        size_t new_capacity;
+        if (list->capacity == 0) {
+            new_capacity = 1;
+        } else {
+            if (list->capacity > SIZE_MAX / 2) {
+                return -1; // Doubling the capacity would overflow size_t
+            }
+            new_capacity = list->capacity * 2; // Double the capacity
+        }
+        if (new_capacity > SIZE_MAX / sizeof(Product)) {
+            return -1; // Byte size for realloc would overflow size_t
+        }
         Product *new_items = realloc(list->items, new_capacity * sizeof(Product)); // Reallocate memory for the items array
         if (new_items == NULL) {
             return -1; // Memory allocation failed
@@ -40,15 +59,16 @@ bool parse_expected_file(ProductList *list, Report *report){
     char quantitychar[8];
     FILE *file = fopen("expected.txt", "r");
 
-        if (file == NULL) {
-    fprintf(stderr, "Could not open expected.txt\n");
-    return false;
+    if (file == NULL) {
+        fprintf(stderr, "Could not open expected.txt\n");
+        return false;
 }
     
 
     while( fgets(input, sizeof input, file) != NULL){
         Product temp = {0};
-       
+        input[strcspn(input, "\r\n")] = '\0'; // Remove trailing newline (and \r on Windows) so it does not end up in the last field
+
         int fields = sscanf(input, "%19[^|]|%19[^|]|%7[^|]", temp.id, temp.name, quantitychar);
         if(fields == 3){
             if(temp.id[0] == '\0'){
@@ -125,6 +145,8 @@ bool parse_counted_file(ProductList *list,  Report *report){
 }
     while( fgets(input, sizeof input, file) != NULL){
         Product temp = {0};
+        input[strcspn(input, "\r\n")] = '\0'; // Remove trailing newline (and \r on Windows) so it does not end up in the last field
+
         int fields = sscanf(input, "%19[^|]|%7[^|]", temp.id, quantitychar);
         if(fields == 2){
             if(quantitychar[0] == '\0'){
