@@ -1,0 +1,5 @@
+A1042|USB-C Cable|120
+B5531|Keyboard|35
+C9120|Monitor|18
+D1172|Webcam|42
+    
